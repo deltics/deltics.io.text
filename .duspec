@@ -1,0 +1,41 @@
+{
+  "id":"deltics.io.textreaders",
+  "version":"",
+  "summary":"Provides readers of text streams.",
+  "tags":[
+    "deltics",
+    "delphi",
+    "unicode",
+    "streams",
+    "readers",
+    "text",
+    "io"
+  ],
+  "compiler":{
+      "language":"pascal",
+      "product":"delphi",
+      "versions":"[7 .. 10.4], !8"
+    },
+  "copyright":"\u00A92020 Jolyon Direnko-Smith",
+  "language":"en",
+  "content":"source",
+  "dependencies":[
+    "deltics.inc:1.3.0",
+    "deltics.exceptions:1.1.0",
+    "deltics.memento:1.0.0",
+    "deltics.pointers:1.1.1",
+    "deltics.strings:1.3.0-beta.16",
+    "deltics.io.streams:1.1.0-beta.74"
+  ],
+  "source":{
+      "files":[
+        "src\\deltics.io.textreaders.inc",
+        "src\\Deltics.IO.TextReaders.pas",
+        "src\\Deltics.IO.TextReaders.TextReader.pas",
+        "src\\Deltics.IO.TextReaders.Interfaces.pas",
+        "src\\Deltics.IO.TextReaders.Unicode.pas",
+        "src\\Deltics.IO.TextReaders.Utf8.pas",
+        "src\\Deltics.IO.TextReaders.Types.pas"
+      ]
+    }
+}
