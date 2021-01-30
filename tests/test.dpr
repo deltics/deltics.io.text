@@ -7,9 +7,9 @@
 
 uses
   FastMM4,
-  Deltics.Smoketest
-  Deltics.IO.Text.Interfaces in '..\src\Deltics.IO.Text.Interfaces.pas',
+  Deltics.Smoketest,
   Deltics.IO.Text in '..\src\Deltics.IO.Text.pas',
+  Deltics.IO.Text.Interfaces in '..\src\Deltics.IO.Text.Interfaces.pas',
   Deltics.IO.Text.TextReader in '..\src\Deltics.IO.Text.TextReader.pas',
   Deltics.IO.Text.Types in '..\src\Deltics.IO.Text.Types.pas',
   Deltics.IO.Text.Unicode in '..\src\Deltics.IO.Text.Unicode.pas',
