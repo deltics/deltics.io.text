@@ -1,7 +1,7 @@
 
-{$i deltics.io.textreaders.inc}
+{$i deltics.io.text.inc}
 
-  unit Deltics.IO.TextReaders.TextReader;
+  unit Deltics.IO.Text.TextReader;
 
 
 interface
@@ -10,8 +10,8 @@ interface
     Classes,
     Deltics.InterfacedObjects,
     Deltics.Strings,
-    Deltics.IO.TextReaders.Interfaces,
-    Deltics.IO.TextReaders.Types;
+    Deltics.IO.Text.Interfaces,
+    Deltics.IO.Text.Types;
 
 
   type

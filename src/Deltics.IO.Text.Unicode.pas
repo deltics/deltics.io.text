@@ -1,16 +1,16 @@
 
-{$i deltics.io.textreaders.inc}
+{$i deltics.io.text.inc}
 
-  unit Deltics.IO.TextReaders.Unicode;
+  unit Deltics.IO.Text.Unicode;
 
 
 interface
 
   uses
     Deltics.Strings,
-    Deltics.IO.TextReaders.TextReader,
-    Deltics.IO.TextReaders.Interfaces,
-    Deltics.IO.TextReaders.Types;
+    Deltics.IO.Text.TextReader,
+    Deltics.IO.Text.Interfaces,
+    Deltics.IO.Text.Types;
 
 
   type

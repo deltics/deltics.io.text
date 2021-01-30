@@ -1,7 +1,7 @@
 
-{$i deltics.io.textreaders.inc}
+{$i deltics.io.text.inc}
 
-  unit Deltics.IO.TextReaders.Types;
+  unit Deltics.IO.Text.Types;
 
 
 interface
