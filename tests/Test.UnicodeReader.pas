@@ -180,7 +180,7 @@ implementation
     while NOT sut.EOF do
       s := s + sut.NextChar;
 
-    Test('s').Assert(s).Equals('Quick Brown©2020: The Quick Brown Fox Jumped Over The Lazy Dog');
+    Test('s').Assert(s).Equals('Quick BrownÂ©2020: The Quick Brown Fox Jumped Over The Lazy Dog');
   end;
 
 
