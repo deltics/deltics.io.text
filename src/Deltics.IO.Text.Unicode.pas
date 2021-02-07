@@ -1,7 +1,7 @@
 
 {$i deltics.io.text.inc}
 
-  unit Deltics.IO.Text.Unicode;
+  unit Deltics.io.Text.Unicode;
 
 
 interface
@@ -15,12 +15,14 @@ interface
 
   type
     TWideCharArray = array of WideChar;
+    TEOFMethod = function: Boolean of object;
     TReaderMethod = function: WideChar of object;
 
 
     TUnicodeReader = class(TTextReader, IUnicodeReader)
     // ITextReader
     protected
+      function get_EOF: Boolean; override;
       function get_Location: TCharLocation; override;
     // IUnicodeReader
     protected
@@ -35,18 +37,22 @@ interface
       procedure SkipChar;
     private
       fPrevChar: WideChar;
+      fActiveEOF: TEOFMethod;
       fActiveReader: TReaderMethod;
 
       fLocation: TCharLocation;
       fPrevLocation: TCharLocation;
       fActiveLocation: PCharLocation;
 
+      function _InheritedEOF: Boolean;
+      function _NotEOF: Boolean;
       function _ReadPrevChar: WideChar;
       function _ReadNextChar: WideChar;
       procedure DecodeUtf8(const aInputBuffer; const aInputBufferSize: Integer; const aDecodedData; const aDecodedDataMaxSize: Integer; var aInputBufferBytesDecoded: Integer; var aDecodedDataActualSize: Integer);
       procedure DecodeUtf16(const aInputBuffer; const aInputBufferSize: Integer; const aDecodedData; const aDecodedDataMaxSize: Integer; var aInputBufferBytesDecoded: Integer; var aDecodedDataActualSize: Integer);
 
     protected
+      property EOF: TEOFMethod read fActiveEOF;
       property ReadChar: TReaderMethod read fActiveReader;
     public
       procedure AfterConstruction; override;
@@ -78,6 +84,7 @@ implementation
   begin
     inherited;
 
+    fActiveEOF      := _InheritedEOF;
     fActiveReader   := _ReadNextChar;
     fActiveLocation := @fLocation;
 
@@ -371,6 +378,12 @@ implementation
   end;
 
 
+  function TUnicodeReader.get_EOF: Boolean;
+  begin
+    result := fActiveEOF;
+  end;
+
+
   function TUnicodeReader.get_Location: TCharLocation;
   begin
     result := Location^;
@@ -379,6 +392,7 @@ implementation
 
   procedure TUnicodeReader.MoveBack;
   begin
+    fActiveEOF      := _NotEOF;
     fActiveReader   := _ReadPrevChar;
     fActiveLocation := @fPrevLocation;
   end;
@@ -455,6 +469,18 @@ implementation
   end;
 
 
+  function TUnicodeReader._InheritedEOF: Boolean;
+  begin
+    result := inherited EOF;
+  end;
+
+
+  function TUnicodeReader._NotEOF: Boolean;
+  begin
+    result := FALSE;
+  end;
+
+
   function TUnicodeReader._ReadNextChar: WideChar;
   begin
     result := WideChar(ReadWord);
@@ -490,6 +516,7 @@ implementation
   begin
     result := fPrevChar;
 
+    fActiveEOF      := _InheritedEOF;
     fActiveReader   := _ReadNextChar;
     fActiveLocation := @fLocation;
   end;

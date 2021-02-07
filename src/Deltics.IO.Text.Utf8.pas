@@ -1,7 +1,7 @@
 
 {$i deltics.io.text.inc}
 
-  unit Deltics.IO.Text.Utf8;
+  unit Deltics.io.Text.Utf8;
 
 
 interface
@@ -15,6 +15,7 @@ interface
 
   type
     TCharArray = array of Utf8Char;
+    TEOFMethod = function: Boolean of object;
     TReaderMethod = function: Utf8Char of object;
     TWideCharReaderMethod = function: WideChar of object;
 
@@ -22,6 +23,7 @@ interface
     TUtf8Reader = class(TTextReader, IUtf8Reader)
     // ITextReader
     protected
+      function get_EOF: Boolean; override;
       function get_Location: TCharLocation; override;
     // IUtf8Reader
     protected
@@ -41,6 +43,7 @@ interface
     private
       fLoSurrogate: WideChar;
       fPrevChar: Utf8Char;
+      fActiveEOF: TEOFMethod;
       fActiveReader: TReaderMethod;
       fActiveWideCharReader: TWideCharReaderMethod;
 
@@ -48,6 +51,8 @@ interface
       fPrevLocation: TCharLocation;
       fActiveLocation: PCharLocation;
 
+      function _InheritedEOF: Boolean;
+      function _NotEOF: Boolean;
       function _ReadPrevChar: Utf8Char;
       function _ReadUtf8Char: Utf8Char;
       function _ReadError: Utf8Char;
@@ -104,6 +109,7 @@ implementation
   begin
     inherited;
 
+    fActiveEOF            := _InheritedEOF;
     fActiveReader         := _ReadUtf8Char;
     fActiveWideCharReader := _ReadWideChar;
     fActiveLocation       := @fLocation;
@@ -219,6 +225,12 @@ implementation
   end;
 
 
+  function TUtf8Reader.get_EOF: Boolean;
+  begin
+    result := fActiveEOF;
+  end;
+
+
   function TUtf8Reader.get_Location: TCharLocation;
   begin
     result := Location^;
@@ -227,6 +239,7 @@ implementation
 
   procedure TUtf8Reader.MoveBack;
   begin
+    fActiveEOF      := _NotEOF;
     fActiveReader   := _ReadPrevChar;
     fActiveLocation := @fPrevLocation;
   end;
@@ -351,15 +364,27 @@ implementation
   end;
 
 
+  function TUtf8Reader._InheritedEOF: Boolean;
+  begin
+    result := inherited EOF;
+  end;
+
+
+  function TUtf8Reader._NotEOF: Boolean;
+  begin
+    result := FALSE;
+  end;
+
+
   function TUtf8Reader._ReadError: Utf8Char;
   begin
-    raise Exception.Create('Reading a Ut8 character is invalid when the reader is in this state');
+    raise Exception.Create('Reading a Ut8 character is invalid when the reader is in this state (Lo Surrogate expected, following NextWideChar)');
   end;
 
 
   function TUtf8Reader._ReadUtf8Char: Utf8Char;
   begin
-    result    := Utf8Char(ReadByte);
+    result := Utf8Char(ReadByte);
 
     Memory.Copy(@fLocation, @fPrevLocation, sizeof(TCharLocation));
 
@@ -396,6 +421,7 @@ implementation
   begin
     result := fPrevChar;
 
+    fActiveEOF      := _InheritedEOF;
     fActiveReader   := _ReadUtf8Char;
     fActiveLocation := @fLocation;
   end;
