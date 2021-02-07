@@ -1,7 +1,7 @@
 
 {$i deltics.io.text.inc}
 
-  unit Deltics.IO.Text.Types;
+  unit Deltics.io.Text.Types;
 
 
 interface

@@ -1,7 +1,7 @@
 
 {$i deltics.io.text.inc}
 
-  unit Deltics.IO.Text.Interfaces;
+  unit Deltics.io.Text.Interfaces;
 
 
 interface
@@ -9,7 +9,7 @@ interface
   uses
     Deltics.Strings,
     Deltics.IO.Streams,
-    Deltics.IO.Text.Types;
+    Deltics.io.Text.Types;
 
 
   type

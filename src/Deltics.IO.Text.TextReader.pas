@@ -1,7 +1,7 @@
 
 {$i deltics.io.text.inc}
 
-  unit Deltics.IO.Text.TextReader;
+  unit Deltics.io.Text.TextReader;
 
 
 interface
@@ -10,8 +10,8 @@ interface
     Classes,
     Deltics.InterfacedObjects,
     Deltics.Strings,
-    Deltics.IO.Text.Interfaces,
-    Deltics.IO.Text.Types;
+    Deltics.io.Text.Interfaces,
+    Deltics.io.Text.Types;
 
 
   type
@@ -37,7 +37,7 @@ interface
       function get_Location: TCharLocation; virtual; abstract;
       function get_Source: IStream;
       function get_SourceEncoding: TEncoding;
-      function get_EOF: Boolean;
+      function get_EOF: Boolean; virtual;
     private
       fSource: TStream;
       fSourceIntf: IStream;
