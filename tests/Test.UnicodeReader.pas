@@ -26,6 +26,7 @@ interface
       procedure ReadLineReadsBlankLinesWithCRLF;
       procedure ReadLineReadsMultipleLinesWithCR;
       procedure ReadLineReadsMultipleLinesWithCRLF;
+      procedure EOFIsFalseWhenPreviousCharIsCachedAfterMoveBackAtTheEndOfStream;
     end;
 
 
@@ -38,6 +39,27 @@ implementation
 
 
 { UtfReader }
+
+  procedure UnicodeReader.EOFIsFalseWhenPreviousCharIsCachedAfterMoveBackAtTheEndOfStream;
+  var
+    src: UnicodeString;
+    sut: IUnicodeReader;
+  begin
+    src := 'Test';
+
+    sut := TUnicodeReader.Create(src);
+    sut.Skip(4);
+
+    Test('EOF').Assert(sut.EOF).IsTrue;
+
+    sut.MoveBack;
+
+    Test('EOF (after MoveBack)').Assert(sut.EOF).IsFalse;
+    Test('NextChar (after MoveBack)').Assert(sut.NextChar).Equals('t');
+
+    Test('EOF (after NextChar, after MoveBack)').Assert(sut.EOF).IsTrue;
+  end;
+
 
   procedure UnicodeReader.LocationReportsLine1Character5For5CharactersOnFirstLine;
   var
