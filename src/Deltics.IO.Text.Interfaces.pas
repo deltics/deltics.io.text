@@ -9,7 +9,7 @@ interface
   uses
     Deltics.Strings,
     Deltics.IO.Streams,
-    Deltics.IO.Text.Types;
+    Deltics.io.Text.Types;
 
 
   type

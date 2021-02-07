@@ -8,9 +8,9 @@ interface
 
   uses
     Deltics.Strings,
-    Deltics.IO.Text.TextReader,
-    Deltics.IO.Text.Interfaces,
-    Deltics.IO.Text.Types;
+    Deltics.io.Text.TextReader,
+    Deltics.io.Text.Interfaces,
+    Deltics.io.Text.Types;
 
 
   type

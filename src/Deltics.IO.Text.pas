@@ -7,10 +7,10 @@
 interface
 
   uses
-    Deltics.IO.Text.Interfaces,
-    Deltics.IO.Text.Types,
-    Deltics.IO.Text.Unicode,
-    Deltics.IO.Text.Utf8;
+    Deltics.io.Text.Interfaces,
+    Deltics.io.Text.Types,
+    Deltics.io.Text.Unicode,
+    Deltics.io.Text.Utf8;
 
 
   type

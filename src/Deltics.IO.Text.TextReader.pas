@@ -10,8 +10,8 @@ interface
     Classes,
     Deltics.InterfacedObjects,
     Deltics.Strings,
-    Deltics.IO.Text.Interfaces,
-    Deltics.IO.Text.Types;
+    Deltics.io.Text.Interfaces,
+    Deltics.io.Text.Types;
 
 
   type
