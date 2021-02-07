@@ -29,12 +29,12 @@
   "source":{
       "files":[
         "src\\deltics.io.text.inc",
-        "src\\Deltics.IO.Text.pas",
-        "src\\Deltics.IO.Text.TextReader.pas",
-        "src\\Deltics.IO.Text.Interfaces.pas",
-        "src\\Deltics.IO.Text.Unicode.pas",
-        "src\\Deltics.IO.Text.Utf8.pas",
-        "src\\Deltics.IO.Text.Types.pas"
+        "src\\Deltics.io.Text.pas",
+        "src\\Deltics.io.Text.TextReader.pas",
+        "src\\Deltics.io.Text.Interfaces.pas",
+        "src\\Deltics.io.Text.Unicode.pas",
+        "src\\Deltics.io.Text.Utf8.pas",
+        "src\\Deltics.io.Text.Types.pas"
       ]
     }
 }
