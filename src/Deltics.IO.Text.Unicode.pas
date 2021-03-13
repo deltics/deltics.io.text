@@ -1,24 +1,19 @@
 
-{$i deltics.io.text.inc}
+{$i deltics.IO.text.inc}
 
-  unit Deltics.io.Text.Unicode;
+  unit Deltics.IO.Text.Unicode;
 
 
 interface
 
   uses
-    Deltics.Strings,
-    Deltics.io.Text.TextReader,
-    Deltics.io.Text.Interfaces,
-    Deltics.io.Text.Types;
+    Deltics.StringTypes,
+    Deltics.IO.Text.TextReader,
+    Deltics.IO.Text.Interfaces,
+    Deltics.IO.Text.Types;
 
 
   type
-    TWideCharArray = array of WideChar;
-    TEOFMethod = function: Boolean of object;
-    TReaderMethod = function: WideChar of object;
-
-
     TUnicodeReader = class(TTextReader, IUnicodeReader)
     // ITextReader
     protected
@@ -37,8 +32,8 @@ interface
       procedure SkipChar;
     private
       fPrevChar: WideChar;
-      fActiveEOF: TEOFMethod;
-      fActiveReader: TReaderMethod;
+      fActiveEOF: TEofMethod;
+      fActiveReader: TWideCharReaderMethod;
 
       fLocation: TCharLocation;
       fPrevLocation: TCharLocation;
@@ -48,12 +43,12 @@ interface
       function _NotEOF: Boolean;
       function _ReadPrevChar: WideChar;
       function _ReadNextChar: WideChar;
-      procedure DecodeUtf8(const aInputBuffer; const aInputBufferSize: Integer; const aDecodedData; const aDecodedDataMaxSize: Integer; var aInputBufferBytesDecoded: Integer; var aDecodedDataActualSize: Integer);
-      procedure DecodeUtf16(const aInputBuffer; const aInputBufferSize: Integer; const aDecodedData; const aDecodedDataMaxSize: Integer; var aInputBufferBytesDecoded: Integer; var aDecodedDataActualSize: Integer);
+      procedure DecodeUtf8(const aInputBuffer: Pointer; const aInputBytes: Integer; const aDecodeBuffer: Pointer; const aMaxDecodedBytes: Integer; var aInputBytesDecoded: Integer; var aDecodedBytes: Integer);
+      procedure DecodeUtf16(const aInputBuffer: Pointer; const aInputBytes: Integer; const aDecodeBuffer: Pointer; const aMaxDecodedBytes: Integer; var aInputBytesDecoded: Integer; var aDecodedBytes: Integer);
 
     protected
-      property EOF: TEOFMethod read fActiveEOF;
-      property ReadChar: TReaderMethod read fActiveReader;
+      property EOF: TEofMethod read fActiveEOF;
+      property ReadChar: TWideCharReaderMethod read fActiveReader;
     public
       procedure AfterConstruction; override;
       procedure MoveBack;
@@ -69,12 +64,14 @@ implementation
   uses
     SysUtils,
     Deltics.Exceptions,
-    Deltics.Pointers,
-    Deltics.ReverseBytes;
+    Deltics.Memory,
+    Deltics.ReverseBytes,
+    Deltics.Strings.Encoding,
+    Deltics.Unicode;
 
 
   type
-    TEncoding = Deltics.Strings.TEncoding;
+    TEncoding = Deltics.Strings.Encoding.TEncoding;
     TByteArray = array of Byte;
     TWordArray = array of Word;
 
@@ -250,131 +247,44 @@ implementation
   end;
 *)
 
-  procedure TUnicodeReader.DecodeUtf16(const aInputBuffer;
-                                       const aInputBufferSize: Integer;
-                                       const aDecodedData;
-                                       const aDecodedDataMaxSize: Integer;
-                                       var aInputBufferBytesDecoded: Integer;
-                                       var aDecodedDataActualSize: Integer);
+  procedure TUnicodeReader.DecodeUtf16(const aInputBuffer: Pointer;
+                                       const aInputBytes: Integer;
+                                       const aDecodeBuffer: Pointer;
+                                       const aMaxDecodedBytes: Integer;
+                                       var   aInputBytesDecoded: Integer;
+                                       var   aDecodedBytes: Integer);
   begin
-    Memory.Copy(@aInputBuffer, @aDecodedData, aInputBufferSize);
-    ReverseBytes(PWord(@aDecodedData), aInputBufferSize div 2);
+    Memory.Copy(aInputBuffer, aInputBytes, aDecodeBuffer);
+    ReverseBytes(PWord(aDecodeBuffer), aInputBytes div 2);
+
+    aInputBytesDecoded  := aInputBytes;
+    aDecodedBytes       := aInputBytes;
   end;
 
 
-  procedure TUnicodeReader.DecodeUtf8(const aInputBuffer;
-                                      const aInputBufferSize: Integer;
-                                      const aDecodedData;
-                                      const aDecodedDataMaxSize: Integer;
-                                      var   aInputBufferBytesDecoded: Integer;
-                                      var   aDecodedDataActualSize: Integer);
+  procedure TUnicodeReader.DecodeUtf8(const aInputBuffer: Pointer;
+                                      const aInputBytes: Integer;
+                                      const aDecodeBuffer: Pointer;
+                                      const aMaxDecodedBytes: Integer;
+                                      var   aInputBytesDecoded: Integer;
+                                      var   aDecodedBytes: Integer);
 
   var
-    buffer: PByteArray;
-    bufIdx: Integer;
-    bufRemain: Integer;
-
-    function GetByte: Byte;
-    begin
-      result := buffer[bufIdx];
-      Inc(bufIdx);
-      Dec(bufRemain);
-    end;
-
-    function GetBufferCodepoint(var aCodepoint: Integer): Boolean;
-    var
-      b1, b2, b3, b4: Byte;
-    begin
-      result := bufRemain > 0;
-      if NOT result then
-        EXIT;
-
-      b1 := GetByte;
-
-      result := (b1 and $80) = $00;
-      if result then
-      begin
-        aCodepoint := Integer(b1);
-        EXIT;
-      end;
-
-      try
-        case b1 and $f0 of
-          $c0,                                // 1100
-          $d0 : begin                         // 1101
-                  if bufRemain = 0 then
-                    EXIT;
-
-                  b2          := GetByte;
-                  aCodepoint  := ((b1 and $1f) shl 6)
-                               or (b2 and $3f);
-                end;
-
-          $e0 : begin                         // 1110
-                  if bufRemain < 2 then
-                    EXIT;
-
-                  b2 := GetByte;
-                  b3 := GetByte;
-                  aCodepoint  := ((b1 and $0f) shl 12)
-                              or ((b2 and $3f) shl 6)
-                              or  (b3 and $3f);
-                end;
-
-          $f0 : begin                         // 11110
-                  if bufRemain < 3 then
-                    EXIT;
-
-                  b2 := GetByte;
-                  b3 := GetByte;
-                  b4 := GetByte;
-                  aCodepoint := ((b1 and $0f) shl 18)
-                             or ((b2 and $3f) shl 12)
-                             or ((b3 and $3f) shl 6)
-                             or  (b4 and $3f);
-                end;
-        else
-          raise Exception.Create('Not a valid Utf8 encoded stream');
-        end;
-        result := TRUE;
-
-      finally
-        if NOT result then
-          Dec(bufIdx);
-      end;
-    end;
-
-  var
-    data: PWideChar;
-    codepoint: Integer;
-    dataIdx: Integer;
+    inBuf: PUtf8Char;
+    outBuf: PWideChar;
+    inChars: Integer;
+    outChars: Integer;
   begin
-    buffer  := PByteArray(@aInputBuffer);
-    data    := PWideChar(@aDecodedData);
+    inBuf   := PUtf8Char(aInputBuffer);
+    outBuf  := PWideChar(aDecodeBuffer);
 
-    bufIdx    := 0;
-    bufRemain := aInputBufferSize;
-    dataIdx   := 0;
+    inChars   := aInputBytes;
+    outChars  := aMaxDecodedBytes div 2;
 
-    while GetBufferCodepoint(codepoint) do
-    begin
-      if codepoint < $10000 then
-      begin
-        data[dataIdx] := WideChar(codepoint);
-        Inc(dataIdx);
-        CONTINUE;
-      end;
+    Unicode.Utf8ToUtf16(inBuf, inChars, outBuf, outChars);
 
-      codepoint := codepoint - $10000;
-
-      data[dataIdx]     := WideChar($d800 or ((codepoint shr 10) and $03ffff));
-      data[dataIdx + 1] := WideChar($dc00 or (codepoint and $03ffff));
-
-      Inc(dataIdx, 2);
-    end;
-
-    aInputBufferBytesDecoded  := bufIdx;
-    aDecodedDataActualSize    := dataIdx * 2;
+    aInputBytesDecoded  := aInputBytes - inChars;
+    aDecodedBytes       := aMaxDecodedBytes - (outChars * 2);
   end;
 
 
@@ -485,7 +395,7 @@ implementation
   begin
     result := WideChar(ReadWord);
 
-    Memory.Copy(@fLocation, @fPrevLocation, sizeof(TCharLocation));
+    Memory.Copy(@fLocation, sizeof(TCharLocation), @fPrevLocation);
 
     if Word(result) < $0080 then                                        // IsAscii
     begin

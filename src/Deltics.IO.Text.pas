@@ -1,16 +1,16 @@
 
-{$i deltics.io.text.inc}
+{$i deltics.IO.text.inc}
 
-  unit Deltics.io.Text;
+  unit Deltics.IO.Text;
 
 
 interface
 
   uses
-    Deltics.io.Text.Interfaces,
-    Deltics.io.Text.Types,
-    Deltics.io.Text.Unicode,
-    Deltics.io.Text.Utf8;
+    Deltics.IO.Text.Interfaces,
+    Deltics.IO.Text.Types,
+    Deltics.IO.Text.Unicode,
+    Deltics.IO.Text.Utf8;
 
 
   type
@@ -28,6 +28,6 @@ interface
 
 
 
-implementation
+implementatIOn
 
 end.

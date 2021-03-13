@@ -1,16 +1,21 @@
 
 {$i deltics.io.text.inc}
 
-  unit Deltics.io.Text.Types;
+  unit Deltics.IO.Text.Types;
 
 
 interface
 
   uses
-    Deltics.Strings;
+    Deltics.StringTypes;
 
 
   type
+    TEofMethod = function: Boolean of object;
+    TUtf8CharReaderMethod = function: Utf8Char of object;
+    TWideCharReaderMethod = function: WideChar of object;
+
+
     PCharLocation = ^TCharLocation;
     TCharLocation = record
       Line: Integer;
