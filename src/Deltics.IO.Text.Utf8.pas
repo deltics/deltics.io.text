@@ -79,12 +79,12 @@ implementation
     SysUtils,
     Deltics.Exceptions,
     Deltics.Memory,
-    Deltics.Strings.Encoding,
+    Deltics.StringEncodings,
     Deltics.Unicode;
 
 
   type
-    TEncoding = Deltics.Strings.Encoding.TEncoding;
+    TEncoding = Deltics.StringEncodings.TEncoding;
     TByteArray = array of Byte;
     TWordArray = array of Word;
 

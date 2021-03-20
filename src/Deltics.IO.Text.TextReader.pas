@@ -9,8 +9,8 @@ interface
   uses
     Classes,
     Deltics.InterfacedObjects,
+    Deltics.StringEncodings,
     Deltics.StringTypes,
-    Deltics.Strings.Encoding,
     Deltics.IO.Text.Interfaces,
     Deltics.IO.Text.Types;
 
@@ -97,7 +97,7 @@ implementation
     INPUT_BUFFER_SIZE = 4096;
 
   type
-    TEncoding = Deltics.Strings.Encoding.TEncoding;
+    TEncoding = Deltics.StringEncodings.TEncoding;
     TByteArray = array of Byte;
     TWordArray = array of Word;
 

@@ -7,8 +7,8 @@
 interface
 
   uses
+    Deltics.StringEncodings,
     Deltics.StringTypes,
-    Deltics.Strings.Encoding,
     Deltics.IO.Streams,
     Deltics.IO.Text.Types;
 
