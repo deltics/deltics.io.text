@@ -1,25 +1,19 @@
 
-{$i deltics.io.text.inc}
+{$i deltics.IO.text.inc}
 
-  unit Deltics.io.Text.Utf8;
+  unit Deltics.IO.Text.Utf8;
 
 
 interface
 
   uses
-    Deltics.Strings,
-    Deltics.io.Text.TextReader,
-    Deltics.io.Text.Interfaces,
-    Deltics.io.Text.Types;
+    Deltics.StringTypes,
+    Deltics.IO.Text.TextReader,
+    Deltics.IO.Text.Interfaces,
+    Deltics.IO.Text.Types;
 
 
   type
-    TCharArray = array of Utf8Char;
-    TEOFMethod = function: Boolean of object;
-    TReaderMethod = function: Utf8Char of object;
-    TWideCharReaderMethod = function: WideChar of object;
-
-
     TUtf8Reader = class(TTextReader, IUtf8Reader)
     // ITextReader
     protected
@@ -43,8 +37,8 @@ interface
     private
       fLoSurrogate: WideChar;
       fPrevChar: Utf8Char;
-      fActiveEOF: TEOFMethod;
-      fActiveReader: TReaderMethod;
+      fActiveEOF: TEofMethod;
+      fActiveReader: TUtf8CharReaderMethod;
       fActiveWideCharReader: TWideCharReaderMethod;
 
       fLocation: TCharLocation;
@@ -58,11 +52,11 @@ interface
       function _ReadError: Utf8Char;
       function _ReadWideChar: WideChar;
       function _ReadLoSurrogate: WideChar;
-      procedure DecodeUtf16(const aInputBuffer; const aInputBufferSize: Integer; const aDecodedData; const aDecodedDataMaxSize: Integer; var aInputBufferBytesDecoded: Integer; var aDecodedDataActualSize: Integer);
-      procedure DecodeUtf16LE(const aInputBuffer; const aInputBufferSize: Integer; const aDecodedData; const aDecodedDataMaxSize: Integer; var aInputBufferBytesDecoded: Integer; var aDecodedDataActualSize: Integer);
+      procedure DecodeUtf16Be(const aInputBuffer: Pointer; const aInputBytes: Integer; const aDecodeBuffer: Pointer; const aMaxDecodedBytes: Integer; var aInputBytesDecoded: Integer; var aDecodedBytes: Integer);
+      procedure DecodeUtf16(const aInputBuffer: Pointer; const aInputBytes: Integer; const aDecodeBuffer: Pointer; const aMaxDecodedBytes: Integer; var aInputBytesDecoded: Integer; var aDecodedBytes: Integer);
 
     protected
-      property ReadChar: TReaderMethod read fActiveReader;
+      property ReadChar: TUtf8CharReaderMethod read fActiveReader;
       property ReadWideChar: TWideCharReaderMethod read fActiveWideCharReader;
     public
       procedure AfterConstruction; override;
@@ -84,11 +78,13 @@ implementation
   uses
     SysUtils,
     Deltics.Exceptions,
-    Deltics.Pointers;
+    Deltics.Memory,
+    Deltics.StringEncodings,
+    Deltics.Unicode;
 
 
   type
-    TEncoding = Deltics.Strings.TEncoding;
+    TEncoding = Deltics.StringEncodings.TEncoding;
     TByteArray = array of Byte;
     TWordArray = array of Word;
 
@@ -115,8 +111,8 @@ implementation
     fActiveLocation       := @fLocation;
 
     case SourceEncoding.Codepage of
-      cpUtf16   : SetDecoder(DecodeUtf16);
-      cpUtf16LE : SetDecoder(DecodeUtf16LE);
+      cpUtf16   : SetDecoder(DecodeUtf16Be);
+      cpUtf16Le : SetDecoder(DecodeUtf16);
       cpUtf8    : SetDecoder(NIL);
     else
       raise ENotSupported.Create('Utf8Reader does not support reading from sources with encoding ' + IntToStr(SourceEncoding.Codepage));
@@ -127,101 +123,53 @@ implementation
 
 
 
-  procedure TUtf8Reader.DecodeUtf16(const aInputBuffer;
-                                        const aInputBufferSize: Integer;
-                                        const aDecodedData;
-                                        const aDecodedDataMaxSize: Integer;
-                                        var aInputBufferBytesDecoded: Integer;
-                                        var aDecodedDataActualSize: Integer);
+  procedure TUtf8Reader.DecodeUtf16Be(const aInputBuffer: Pointer;
+                                      const aInputBytes: Integer;
+                                      const aDecodeBuffer: Pointer;
+                                      const aMaxDecodedBytes: Integer;
+                                      var   aInputBytesDecoded: Integer;
+                                      var   aDecodedBytes: Integer);
   var
-    input: TWordArray absolute aInputBuffer;
-    data: TByteArray absolute aDecodedData;
-    i: Integer;
-    dp: Integer;
-    wc: Word;
+    inBuf: PWideChar;
+    outBuf: PUtf8Char;
+    inChars: Integer;
+    outChars: Integer;
   begin
+    inBuf   := PWideChar(aInputBuffer);
+    outBuf  := PUtf8Char(aDecodeBuffer);
 
-    dp := 0;
-    for i := 0 to Pred(aInputBufferSize) div 2 do
-    begin
-      wc := input[i];
+    inChars   := aInputBytes div 2;
+    outChars  := aMaxDecodedBytes;
 
-      case wc of
-        $0000..$007f  : begin
-                          data[dp] := Byte(wc);
-                          Inc(dp);
-                        end;
+    Unicode.Utf16BeToUtf8(inBuf, inChars, outBuf, outChars);
 
-        $0080..$07ff  : begin
-                          data[dp]     := Byte($c0 or (wc shr 6));
-                          data[dp + 1] := Byte($80 or (wc and $3f));
-                          Inc(dp, 2);
-                        end;
-
-        $0800..$ffff  : begin
-                          data[dp]     := Byte($e0 or (wc shr 12));
-                          data[dp + 1] := Byte($80 or ((wc shr 6) and $3f));
-                          data[dp + 2] := Byte($80 or (wc and $3f));
-                          Inc(dp, 3);
-                        end;
-
-        //TODO: Correctly decode surrogate pairs
-      end;
-    end;
-
-    aInputBufferBytesDecoded  := aInputBufferSize;
-    aDecodedDataActualSize    := dp;
+    aInputBytesDecoded  := aInputBytes - (inChars * 2);
+    aDecodedBytes       := aMaxDecodedBytes - outChars;
   end;
 
 
-  procedure TUtf8Reader.DecodeUtf16LE(const aInputBuffer;
-                                          const aInputBufferSize: Integer;
-                                          const aDecodedData;
-                                          const aDecodedDataMaxSize: Integer;
-                                          var aInputBufferBytesDecoded: Integer;
-                                          var aDecodedDataActualSize: Integer);
+  procedure TUtf8Reader.DecodeUtf16(const aInputBuffer: Pointer;
+                                    const aInputBytes: Integer;
+                                    const aDecodeBuffer: Pointer;
+                                    const aMaxDecodedBytes: Integer;
+                                    var   aInputBytesDecoded: Integer;
+                                    var   aDecodedBytes: Integer);
   var
-    input: PWordArray;
-    data: PByteArray;
-    i: Integer;
-    dp: Integer;
-    wc: Word;
+    inBuf: PWideChar;
+    outBuf: PUtf8Char;
+    inChars: Integer;
+    outChars: Integer;
   begin
-    input := PWordArray(@aInputBuffer);
-    data  := PByteArray(@aDecodedData);
+    inBuf   := PWideChar(aInputBuffer);
+    outBuf  := PUtf8Char(aDecodeBuffer);
 
-    dp := 0;
-    for i := 0 to Pred(aInputBufferSize) div 2 do
-    begin
-      wc := input[i];
+    inChars   := aInputBytes div 2;
+    outChars  := aMaxDecodedBytes;
 
-      case wc of
-        $0000..$007f  : begin
-                          data[dp] := Byte(wc);
-                          Inc(dp);
-                        end;
+    Unicode.Utf16ToUtf8(inBuf, inChars, outBuf, outChars);
 
-        $0080..$07ff  : begin
-                          data[dp]     := Byte($c0 or (wc shr 6));
-                          data[dp + 1] := Byte($80 or (wc and $3f));
-                          Inc(dp, 2);
-                        end;
-
-        $0800..$ffff  : begin
-                          data[dp]     := Byte($e0 or (wc shr 12));
-                          data[dp + 1] := Byte($80 or ((wc shr 6) and $3f));
-                          data[dp + 2] := Byte($80 or (wc and $3f));
-                          Inc(dp, 3);
-                        end;
-
-        //TODO: Correctly decode surrogate pairs and handle split pairs at buffer boundaries
-        //       (i.e. when the last 2 bytes in the input buffer are a hi-surrogate with the
-        //       lo-surrogate of the pair inaccessible [in the _next_ input buffer])
-      end;
-    end;
-
-    aInputBufferBytesDecoded  := aInputBufferSize;
-    aDecodedDataActualSize    := dp;
+    aInputBytesDecoded  := aInputBytes - (inChars * 2);
+    aDecodedBytes       := aMaxDecodedBytes - outChars;
   end;
 
 
@@ -343,12 +291,17 @@ implementation
   var
     currentLine: Integer;
     c: Utf8Char;
+    ic: Integer;
   begin
-    result := '';
+    SetLength(result, 2048);
+    ic := 0;
     currentLine := Location.Line;
 
     while (Location.Line = currentLine) and NOT EOF do
     begin
+      if (ic = Length(result)) then
+        SetLength(result, ic * 2);
+
       c := NextChar;
       case c of
         #10..#12  : CONTINUE;
@@ -358,9 +311,12 @@ implementation
                         MoveBack;
                     end;
       else
-        result := Utf8.Append(result, c);
+        Inc(ic);
+        result[ic] := c;
       end;
     end;
+
+    SetLength(result, ic);
   end;
 
 
@@ -386,7 +342,7 @@ implementation
   begin
     result := Utf8Char(ReadByte);
 
-    Memory.Copy(@fLocation, @fPrevLocation, sizeof(TCharLocation));
+    Memory.Copy(@fLocation, sizeof(TCharLocation), @fPrevLocation);
 
     case result of
       #10       : if fPrevChar <> #13 then

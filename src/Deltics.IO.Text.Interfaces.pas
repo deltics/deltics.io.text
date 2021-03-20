@@ -1,15 +1,16 @@
 
 {$i deltics.io.text.inc}
 
-  unit Deltics.io.Text.Interfaces;
+  unit Deltics.IO.Text.Interfaces;
 
 
 interface
 
   uses
-    Deltics.Strings,
+    Deltics.StringEncodings,
+    Deltics.StringTypes,
     Deltics.IO.Streams,
-    Deltics.io.Text.Types;
+    Deltics.IO.Text.Types;
 
 
   type

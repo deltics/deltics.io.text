@@ -1,7 +1,7 @@
 
-{$i deltics.io.text.inc}
+{$i deltics.IO.text.inc}
 
-  unit Deltics.io.Text.TextReader;
+  unit Deltics.IO.Text.TextReader;
 
 
 interface
@@ -9,13 +9,14 @@ interface
   uses
     Classes,
     Deltics.InterfacedObjects,
-    Deltics.Strings,
-    Deltics.io.Text.Interfaces,
-    Deltics.io.Text.Types;
+    Deltics.StringEncodings,
+    Deltics.StringTypes,
+    Deltics.IO.Text.Interfaces,
+    Deltics.IO.Text.Types;
 
 
   type
-    TDecoderMethod = procedure(const aInputBuffer; const aInputBufferSize: Integer; const aDecodedData; const aDecodedDataMaxSize: Integer; var aInputBufferBytesDecoded: Integer; var aDecodedDataActualSize: Integer) of object;
+    TDecoderMethod = procedure(const aInputBuffer: Pointer; const aInputBytes: Integer; const aDecodeBuffer: Pointer; const aMaxDecodedBytes: Integer; var aInputBytesDecoded: Integer; var aDecodedBytes: Integer) of object;
     TReadSourceMethod = procedure of object;
 
 
@@ -89,14 +90,14 @@ implementation
     SysUtils,
     Deltics.Exceptions,
     Deltics.IO.Streams,
-    Deltics.Pointers;
+    Deltics.Memory;
 
 
   const
     INPUT_BUFFER_SIZE = 4096;
 
   type
-    TEncoding = Deltics.Strings.TEncoding;
+    TEncoding = Deltics.StringEncodings.TEncoding;
     TByteArray = array of Byte;
     TWordArray = array of Word;
 
@@ -194,10 +195,10 @@ implementation
   begin
     if (fBufferRemaining > 0) then
     begin
-      Memory.Copy(Memory.ByteOffset(fBuffer, INPUT_BUFFER_SIZE - fBufferRemaining), fBuffer, fBufferRemaining);
+      Memory.Copy(Memory.Offset(fBuffer, INPUT_BUFFER_SIZE - fBufferRemaining), fBufferRemaining, fBuffer);
 
       maxBufferBytesToRead  := INPUT_BUFFER_SIZE - fBufferRemaining;
-      inputBufferAddress    := Memory.ByteOffset(fBuffer, fBufferRemaining);
+      inputBufferAddress    := Memory.Offset(fBuffer, fBufferRemaining);
     end
     else
     begin
@@ -206,7 +207,7 @@ implementation
     end;
     bufferBytesAvailable := fSource.Read(inputBufferAddress^, maxBufferBytesToRead) + fBufferRemaining;
 
-    Decode(fBuffer^, bufferBytesAvailable, fData^, fDataSize, bufferBytesDecoded, dataBytes);
+    Decode(fBuffer, bufferBytesAvailable, fData, fDataSize, bufferBytesDecoded, dataBytes);
 
     fBufferRemaining  := bufferBytesAvailable - bufferBytesDecoded;
     fDataRemaining    := dataBytes;
@@ -267,6 +268,8 @@ implementation
                                             // It will typically be smaller, but since we don't know
                                             //  what encoding the input uses or what encoding the
                                             //  decoded data will use, we allocate the maximum possible.
+
+      fDataSize := INPUT_BUFFER_SIZE * 4;
 
       fReadSourceMethod := ReadSourceAndDecodeIntoData;
     end

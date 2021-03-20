@@ -36,7 +36,7 @@ implementation
 
   uses
     Deltics.Strings,
-    Deltics.io.Text;
+    Deltics.IO.Text;
 
 
 { UtfReader }
