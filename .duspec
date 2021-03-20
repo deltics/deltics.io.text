@@ -23,8 +23,8 @@
     "deltics.exceptions:1.1.0",
     "deltics.memento:1.0.0",
     "deltics.pointers:1.1.1",
-    "deltics.strings.encoding:2.0.0-beta.1",
-    "deltics.stringtypes:1.1.0",
+    "deltics.stringencodings:2.0.0",
+    "deltics.stringtypes:1.1.1",
     "deltics.io.streams:1.1.1"
   ],
   "source":{
