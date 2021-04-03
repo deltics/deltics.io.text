@@ -30,6 +30,7 @@ interface
       function NextWideChar: WideChar;
       function PeekChar: Utf8Char;
       function PeekCharSkippingWhitespace: Utf8Char;
+      function ReadLine: Utf8String;
       procedure Skip(const aNumChars: Integer);
       procedure SkipWhitespace;
       procedure SkipChar;
@@ -54,8 +55,9 @@ interface
       function _ReadLoSurrogate: WideChar;
       procedure DecodeUtf16Be(const aInputBuffer: Pointer; const aInputBytes: Integer; const aDecodeBuffer: Pointer; const aMaxDecodedBytes: Integer; var aInputBytesDecoded: Integer; var aDecodedBytes: Integer);
       procedure DecodeUtf16(const aInputBuffer: Pointer; const aInputBytes: Integer; const aDecodeBuffer: Pointer; const aMaxDecodedBytes: Integer; var aInputBytesDecoded: Integer; var aDecodedBytes: Integer);
-
     protected
+      property Location: PCharLocation read fActiveLocation;
+      property EOF: TEofMethod read fActiveEOF;
       property ReadChar: TUtf8CharReaderMethod read fActiveReader;
       property ReadWideChar: TWideCharReaderMethod read fActiveWideCharReader;
     public
@@ -66,8 +68,6 @@ interface
       function PeekRealChar(var aWhitespace: String): Utf8Char; overload;
       procedure SkipWhitespace(var aWhitespace: String); overload;
 *)
-      function ReadLine: Utf8String;
-      property Location: PCharLocation read fActiveLocation;
     end;
 
 
@@ -334,7 +334,7 @@ implementation
 
   function TUtf8Reader._ReadError: Utf8Char;
   begin
-    raise Exception.Create('Reading a Ut8 character is invalid when the reader is in this state (Lo Surrogate expected, following NextWideChar)');
+    raise Exception.Create('Reading a Utf8 character is invalid when the reader is in this state (Lo Surrogate expected, following NextWideChar)');
   end;
 
 

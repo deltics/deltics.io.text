@@ -22,11 +22,13 @@ interface
     // IUnicodeReader
     protected
       function IsWhitespace(const aChar: WideChar): Boolean;
+      procedure MoveBack;
       function NextChar: WideChar;
       function NextCharAfter(const aFilter: TWideCharFilterFn): WideChar;
       function NextCharSkippingWhitespace: WideChar;
       function PeekChar: WideChar;
       function PeekCharSkippingWhitespace: WideChar;
+      function ReadLine: UnicodeString;
       procedure Skip(const aNumChars: Integer);
       procedure SkipWhitespace;
       procedure SkipChar;
@@ -45,15 +47,12 @@ interface
       function _ReadNextChar: WideChar;
       procedure DecodeUtf8(const aInputBuffer: Pointer; const aInputBytes: Integer; const aDecodeBuffer: Pointer; const aMaxDecodedBytes: Integer; var aInputBytesDecoded: Integer; var aDecodedBytes: Integer);
       procedure DecodeUtf16(const aInputBuffer: Pointer; const aInputBytes: Integer; const aDecodeBuffer: Pointer; const aMaxDecodedBytes: Integer; var aInputBytesDecoded: Integer; var aDecodedBytes: Integer);
-
     protected
       property EOF: TEofMethod read fActiveEOF;
+      property Location: PCharLocation read fActiveLocation;
       property ReadChar: TWideCharReaderMethod read fActiveReader;
     public
       procedure AfterConstruction; override;
-      procedure MoveBack;
-      function ReadLine: UnicodeString;
-      property Location: PCharLocation read fActiveLocation;
     end;
 
 
